@@ -4,15 +4,16 @@ use std::io::{self, BufRead};
 fn read_words_file() -> Result<Vec<String>, std::io::Error> {
     let file = File::open("/usr/share/dict/words")?;
 
-    let mut words = vec![];
-    for line in io::BufReader::new(file).lines() {
+    let words = io::BufReader::new(file).lines().filter_map(|line| {
         if let Ok(word) = line {
             match (word.len(), word.chars().nth(0).unwrap()) {
-                (5, 'a'..='z') => words.push(word),
-                _ => {},
+                (5, 'a'..='z') => Some(word),
+                _ => None,
             }
+        } else {
+            None
         }
-    }
+    }).collect();
 
     Ok(words)
 }
