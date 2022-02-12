@@ -19,61 +19,25 @@ fn read_words_file() -> Result<Vec<String>, std::io::Error> {
 }
 
 #[derive(Debug)]
-enum Status {
-    YELLOW,
-    GREEN,
-    BLACK,
-}
-
-#[derive(Debug)]
-struct Character {
-    char: char,
-    status: Status,
-    pos: usize,
-}
-
-#[derive(Debug)]
 struct Guess {
-    chars: Vec<Character>,
+    word: String,
+    status: String,
 }
 
-fn build_guess(word: &str, status: &str) -> Guess {
-    let pair = word.chars().zip(status.chars());
-    let mut chars = vec![];
-    for (i, (char, st)) in pair.enumerate() {
-        let status = match st {
-            'Y' => Status::YELLOW,
-            'G' => Status::GREEN,
-            'B' => Status::BLACK,
-            _ => Status::BLACK,
+fn satisfy(answer: &str, guess: &Guess) -> bool {
+    let mut status = String::new();
+    for (i, c) in guess.word.chars().enumerate() {
+        let s = if answer.chars().nth(i) == Some(c) {
+            'G'
+        } else if answer.contains(c) && answer.chars().nth(i) != Some(c) {
+            'Y'
+        } else {
+            'B'
         };
-        let pos = i;
-        chars.push(Character { char, status, pos })
+        status.push(s);
     }
 
-    Guess { chars }
-}
-
-fn satisfy(word: &str, guess: &Guess) -> bool {
-    for char in &guess.chars {
-        let ok = match char.status {
-            Status::YELLOW => {
-                word.contains(char.char) && word.chars().nth(char.pos) != Some(char.char)
-            },
-            Status::GREEN => {
-                word.chars().nth(char.pos) == Some(char.char)
-            },
-            Status::BLACK => {
-                !word.contains(char.char)
-            },
-        };
-
-        if !ok {
-            return false;
-        }
-    }
-
-    true
+    status == guess.status
 }
 
 fn main() {
@@ -88,7 +52,7 @@ fn main() {
         if let Ok(_) = io::stdin().read_line(& mut line) {
             let guess : Vec<&str> = line.split_whitespace().collect();
             if guess.len() == 2 {
-                guesses.push(build_guess(guess[0], guess[1]));
+                guesses.push(Guess { word: guess[0].to_string(), status: guess[1].to_string() });
             } else {
                 eprintln!("Invalid input.");
             }
