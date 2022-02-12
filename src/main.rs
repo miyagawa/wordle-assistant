@@ -8,9 +8,9 @@ fn read_words_file() -> Result<Vec<String>, std::io::Error> {
     let mut words = vec![];
     for line in lines {
         if let Ok(word) = line {
-            let first = word.chars().nth(0).unwrap();
-            if word.len() == 5 && first >= 'a' && first <= 'z'  {
-                words.push(word);
+            match (word.len(), word.chars().nth(0).unwrap()) {
+                (5, 'a'..='z') => words.push(word),
+                _ => {},
             }
         }
     }
