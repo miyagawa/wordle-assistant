@@ -49,16 +49,20 @@ fn main() {
     loop {
         println!("---> Enter your guess, followed by YGB (Yellow, Green, Black)");
         let mut line = String::new();
-        if let Ok(_) = io::stdin().read_line(& mut line) {
-            let guess : Vec<&str> = line.split_whitespace().collect();
-            if guess.len() == 2 {
-                guesses.push(Guess { word: guess[0].to_string(), status: guess[1].to_string() });
-            } else {
-                eprintln!("Invalid input.");
-            }
-        } else {
-            eprintln!("Invalid input.");
-        }
+        match io::stdin().read_line(& mut line) {
+            Ok(0) => {
+                std::process::exit(0);
+            },
+            Ok(_) => {
+                let guess : Vec<&str> = line.split_whitespace().collect();
+                if guess.len() == 2 {
+                    guesses.push(Guess { word: guess[0].to_string(), status: guess[1].to_string() });
+                } else {
+                    eprintln!("Invalid input.");
+                }
+            },
+            _ => {},
+        };
 
         'words: for word in &words {
             for guess in &guesses {
