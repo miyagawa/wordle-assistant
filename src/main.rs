@@ -55,11 +55,15 @@ fn main() {
             },
             Ok(_) => {
                 let guess : Vec<&str> = line.split_whitespace().collect();
-                if guess.len() == 2 {
-                    guesses.push(Guess { word: guess[0].to_string(), status: guess[1].to_string() });
-                } else {
-                    eprintln!("Invalid input.");
-                }
+                match guess.len() {
+                    2 => {
+                        guesses.push(Guess { word: guess[0].to_string(), status: guess[1].to_string() });
+                    },
+                    _ => {
+                        eprintln!("Invalid input.");
+                        continue;
+                    },
+                };
             },
             _ => {},
         };
