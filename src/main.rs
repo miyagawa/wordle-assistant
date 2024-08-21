@@ -25,16 +25,18 @@ struct Guess {
     status: String,
 }
 
-fn satisfy(answer: &str, guess: &Guess) -> bool {
-    let status: String = guess.word.chars().enumerate().map(|(i, c)| {
-        match (answer.contains(c), answer.chars().nth(i)) {
-            (true, Some(a)) if a == c => 'G',
-            (true, Some(a)) if a != c => 'Y',
-            _ => 'B',
-        }
-    }).collect();
+impl Guess {
+    fn satisfy(&self, answer: &str) -> bool {
+        let status: String = self.word.chars().enumerate().map(|(i, c)| {
+            match (answer.contains(c), answer.chars().nth(i)) {
+                (true, Some(a)) if a == c => 'G',
+                (true, Some(a)) if a != c => 'Y',
+                _ => 'B',
+            }
+        }).collect();
 
-    status == guess.status
+        status == self.status
+    }
 }
 
 fn main() {
@@ -54,7 +56,6 @@ fn main() {
         if let Some(caps) = re.captures(&line.trim_end()) {
             let word = caps.get(1).map_or("", |m| m.as_str()).to_string();
             let status = caps.get(2).map_or("", |m| m.as_str()).to_string();
-
             guesses.push(Guess { word, status });
         } else {
             eprintln!("Invalid input.");
@@ -62,7 +63,7 @@ fn main() {
         }
 
         words.iter()
-            .filter(|&word| guesses.iter().all(|guess| satisfy(word, guess)))
+            .filter(|&word| guesses.iter().all(|guess| guess.satisfy(word)))
             .for_each(|word| println!("{}", word));
     }
 }
