@@ -1,31 +1,21 @@
+use regex::Regex;
 use std::error;
 use std::fs::File;
 use std::io::{self, BufRead};
-use regex::Regex;
 
 type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
 
 fn read_words_file() -> Result<Vec<String>> {
     let file = File::open("/usr/share/dict/words")?;
 
-    Ok(io::BufReader::new(file).lines()
-       .flatten()
-       .filter_map(|word| {
-           match (word.len(), word.chars().nth(0).unwrap()) {
-               (5, 'a'..='z') => Some(word),
-               _ => None,
-           }
-       })
-       .collect())
-}
-
-fn mask_answer(ans: &mut Vec<char>, c: char) {
-    for i in 0..ans.len() {
-        if ans[i] == c {
-            ans[i] = '_';
-            break;
-        }
-    }
+    Ok(io::BufReader::new(file)
+        .lines()
+        .flatten()
+        .filter_map(|word| match (word.len(), word.chars().nth(0).unwrap()) {
+            (5, 'a'..='z') => Some(word),
+            _ => None,
+        })
+        .collect())
 }
 
 #[derive(Debug)]
@@ -36,13 +26,19 @@ struct Guess {
 
 impl Guess {
     fn build_status(&self, answer: &str) -> String {
-        let mut ans : Vec<char> = answer.chars().collect();
-        self.word.chars().enumerate().map(|(i, c)| {
+        let mut ans: Vec<char> = answer.chars().collect();
+
+        for (i, c) in self.word.chars().enumerate() {
             if ans[i] == c {
-                mask_answer(&mut ans, c);
+                ans[i] = '*';
+            }
+        }
+
+        self.word.chars().enumerate().map(|(i, c)| {
+            if ans[i] == '*' {
                 'G'
-            } else if ans.contains(&c) {
-                mask_answer(&mut ans, c);
+            } else if let Some(j) = ans.iter().position(|&r| r == c) {
+                ans[j] = '_';
                 'Y'
             } else {
                 'B'
@@ -51,13 +47,13 @@ impl Guess {
     }
 
     fn satisfy(&self, answer: &str) -> bool {
+        eprintln!("{} {}", answer, self.build_status(answer));
         self.build_status(answer) == self.status
     }
 }
 
 fn main() {
-    let words = read_words_file()
-        .expect("Could not read file");
+    let words = read_words_file().expect("Could not read file");
 
     let re = Regex::new(r"^([a-zA-Z]{5}) ([YGB]{5})$").unwrap();
     let mut guesses = Vec::new();
@@ -78,9 +74,9 @@ fn main() {
             continue;
         }
 
-        words.iter()
+        words
+            .iter()
             .filter(|&word| guesses.iter().all(|guess| guess.satisfy(word)))
             .for_each(|word| println!("{}", word));
     }
 }
-
