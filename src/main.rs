@@ -19,6 +19,15 @@ fn read_words_file() -> Result<Vec<String>> {
        .collect())
 }
 
+fn mask_answer(ans: &mut Vec<char>, c: char) {
+    for i in 0..ans.len() {
+        if ans[i] == c {
+            ans[i] = '_';
+            break;
+        }
+    }
+}
+
 #[derive(Debug)]
 struct Guess {
     word: String,
@@ -26,16 +35,23 @@ struct Guess {
 }
 
 impl Guess {
-    fn satisfy(&self, answer: &str) -> bool {
-        let status: String = self.word.chars().enumerate().map(|(i, c)| {
-            match (answer.contains(c), answer.chars().nth(i)) {
-                (true, Some(a)) if a == c => 'G',
-                (true, Some(a)) if a != c => 'Y',
-                _ => 'B',
+    fn build_status(&self, answer: &str) -> String {
+        let mut ans : Vec<char> = answer.chars().collect();
+        self.word.chars().enumerate().map(|(i, c)| {
+            if ans[i] == c {
+                mask_answer(&mut ans, c);
+                'G'
+            } else if ans.contains(&c) {
+                mask_answer(&mut ans, c);
+                'Y'
+            } else {
+                'B'
             }
-        }).collect();
+        }).collect()
+    }
 
-        status == self.status
+    fn satisfy(&self, answer: &str) -> bool {
+        self.build_status(answer) == self.status
     }
 }
 
