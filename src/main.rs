@@ -1,19 +1,21 @@
+use std::error;
 use std::fs::File;
 use std::io::{self, BufRead};
 
-fn read_words_file() -> Result<Vec<String>, std::io::Error> {
+type Result<T> = std::result::Result<T, Box<dyn error::Error>>;
+
+fn read_words_file() -> Result<Vec<String>> {
     let file = File::open("/usr/share/dict/words")?;
 
-    let words = io::BufReader::new(file).lines().filter_map(|line| {
-        if let Ok(word) = line {
+    let words = io::BufReader::new(file).lines()
+        .flatten()
+        .filter_map(|word| {
             match (word.len(), word.chars().nth(0).unwrap()) {
                 (5, 'a'..='z') => Some(word),
                 _ => None,
             }
-        } else {
-            None
-        }
-    }).collect();
+        })
+        .collect();
 
     Ok(words)
 }
@@ -68,14 +70,9 @@ fn main() {
             _ => {},
         };
 
-        'words: for word in &words {
-            for guess in &guesses {
-                if !satisfy(word, guess) {
-                    continue 'words;
-                }
-            }
-            println!("{}", word);
-        }
+        words.iter()
+            .filter(|&word| guesses.iter().all(|guess| satisfy(word, guess)))
+            .for_each(|word| println!("{}", word));
     }
 }
 
